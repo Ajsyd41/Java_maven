@@ -1,26 +1,23 @@
 import functions_framework
 
-# CloudEvent function to be triggered by an Eventarc Cloud Audit Logging trigger
-# Note: this is NOT designed for second-party (Cloud Audit Logs -> Pub/Sub) triggers!
+# Triggered by a change in a storage bucket
 @functions_framework.cloud_event
-def hello_auditlog(cloudevent):
-    # Print out the CloudEvent's (required) `type` property
-    # See https://github.com/cloudevents/spec/blob/v1.0.1/spec.md#type
-    print(f"Event type: {cloudevent['type']}")
+def hello_gcs(cloud_event):
+    data = cloud_event.data
 
-    # Print out the CloudEvent's (optional) `subject` property
-    # See https://github.com/cloudevents/spec/blob/v1.0.1/spec.md#subject
-    if 'subject' in cloudevent:
-        # CloudEvent objects don't support `get` operations.
-        # Use the `in` operator to verify `subject` is present.
-        print(f"Subject: {cloudevent['subject']}")
+    event_id = cloud_event["id"]
+    event_type = cloud_event["type"]
 
-    # Print out details from the `protoPayload`
-    # This field encapsulates a Cloud Audit Logging entry
-    # See https://cloud.google.com/logging/docs/audit#audit_log_entry_structure
+    bucket = data["bucket"]
+    name = data["name"]
+    metageneration = data["metageneration"]
+    timeCreated = data["timeCreated"]
+    updated = data["updated"]
 
-    payload = cloudevent.data.get("protoPayload")
-    if payload:
-        print(f"API method: {payload.get('methodName')}")
-        print(f"Resource name: {payload.get('resourceName')}")
-        print(f"Principal: {payload.get('authenticationInfo', dict()).get('principalEmail')}")
+    print(f"Event ID: {event_id}")
+    print(f"Event type: {event_type}")
+    print(f"Bucket: {bucket}")
+    print(f"File: {name}")
+    print(f"Metageneration: {metageneration}")
+    print(f"Created: {timeCreated}")
+    print(f"Updated: {updated}")
