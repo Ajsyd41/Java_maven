@@ -9,7 +9,7 @@ pipeline {
 
     environment{
         
-        GCR_CRED=credentials('gcp-function-service-account-key')
+        GCR_CRED=credentials('gcp-func-service-account-key')
         GCP_PROJECT='activeproject-441912'
         PROJECT_NAME='mydeploy'
         ENVVALUE='qa'
