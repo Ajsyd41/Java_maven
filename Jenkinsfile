@@ -66,11 +66,18 @@ pipeline {
         }
     }
 
-    // stage('Deploy to Cloud function') {
-    //     steps {
-    //         mvnTest()
-    //     }
-    //  }  
+    stage('Deploy to Cloud function') {
+        steps {
+           script{
+                sh "gcloud functions deploy mycallablefunction \\" +
+                       " --region=us-central1 \\" +
+                       " --runtime=python311 \\" +
+                       " --source=gs://run-sources-activeproject-441912-us-central1/services/mycallablefunction/${TAG}.zip \\" +
+                       " --entry-point=hello_auditlog \\" +
+                       " --trigger-http"
+           }
+        }
+     }  
  }
     post { 
         always {
