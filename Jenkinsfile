@@ -50,7 +50,7 @@ pipeline {
     stage('Zip Build') {
         steps {
             script{
-                sh "zip -r ${TAG}.zip . -x 'Jenkinsfile' 'Dockerfile.ci' '.git' '.vscode'"
+                sh "zip -r ${TAG}.zip . -x 'Jenkinsfile' 'Dockerfile.ci' '*.git*' '*.vscode*'"
             }
         }  
     }
@@ -59,7 +59,7 @@ pipeline {
         steps {
             script {
 				sh 'gcloud auth activate-service-account --key-file="$GCR_CRED"'
-                sh "gcloud run services list --project ${GCP_PROJECT}"
+                sh 'gcloud config set project "${GCP_PROJECT}"'
                 sh "gcloud storage ls"
                 sh "gcloud storage cp ${TAG}.zip gs://run-sources-activeproject-441912-us-central1/services/mycallablefunction/"
             }
