@@ -11,7 +11,7 @@ pipeline {
         
         GCR_CRED=credentials('gcp-func-service-account-key')
         GCP_PROJECT='activeproject-441912'
-        PROJECT_NAME='mydeploy'
+        PROJECT_NAME='mymyfunc'
         ENVVALUE='qa'
         TAG="${PROJECT_NAME}-${ENVVALUE}-${BUILD_NUMBER}"
     }
@@ -61,7 +61,7 @@ pipeline {
 				sh 'gcloud auth activate-service-account --key-file="$GCR_CRED"'
                 sh 'gcloud config set project "${GCP_PROJECT}"'
                 sh "gcloud storage ls"
-                sh "gcloud storage cp ${TAG}.zip gs://run-sources-activeproject-441912-us-central1/services/mycallablefunction/"
+                sh "gcloud storage cp ${TAG}.zip gs://run-sources-activeproject-441912-us-central1/services/myfunc/"
             }
         }
     }
@@ -69,12 +69,12 @@ pipeline {
     stage('Deploy to Cloud function') {
         steps {
            script{
-                sh """gcloud functions deploy mycallablefunction \
+                sh """gcloud functions deploy myfunc \
                        --gen2 \
                        --region=us-central1 \
                        --runtime=python311 \
-                       --source=gs://run-sources-activeproject-441912-us-central1/services/mycallablefunction/${TAG}.zip \
-                       --entry-point=hello_auditlog \
+                       --source=gs://run-sources-activeproject-441912-us-central1/services/myfunc/${TAG}.zip \
+                       --entry-point=hello_http \
                        --trigger-http
                 """
            }
