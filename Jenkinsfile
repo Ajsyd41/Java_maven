@@ -1,22 +1,42 @@
-@Library("shared-library") _
-
 pipeline {
 
-    agent {     
-        docker {
-            image 'ajsyd141/java-python'
-            args '-u 0:0 --privileged --net host -v /var/run/docker.sock:/var/run/docker.sock -v /root/.m2:/root/.m2'
+    agent {
+        dockerfile {
+            filename 'Dockerfile.ci'
+            args '-u 0:0 --net host --privileged -v /var/run/docker.sock:/var/run/docker.sock'
         }
+    }
+
+    environment{
+        
+        GCR_CRED=credentials('gcp-function-service-account-key')
+        GCP_PROJECT='activeproject-441912'
+        PROJECT_NAME='mydeploy'
+        ENVVALUE='qa'
+        TAG="${PROJECT_NAME}-${ENVVALUE}-${BUILD_NUMBER}"
     }
 
  stages {
 
-    stage('Pipeline Metadata') {
-        steps {
-         script {
-            gitCheckOut.customCheckout()
-         }
-      }  
+    stage("Pipeline Metadata"){
+        steps{
+            script{
+                try{
+                    sh """
+                        echo 'Build Number: ${BUILD_NUMBER}'
+                        echo 'Git URL: ${GIT_URL}'
+                        echo 'Git Branch: ${GIT_BRANCH}'
+                        echo 'Git Commit: ${GIT_COMMIT}'
+                        echo 'Build ID: ${BUILD_ID}'
+                    """
+                }
+                catch(Exception e)
+                {
+                    echo "Pipeline metadata check failed: ${e.message}"
+                    sh "exit 1"
+                }       
+            }
+        }
     }
 
     stage('Install Dependencies'){
@@ -27,71 +47,33 @@ pipeline {
         }
     }
 
-   stage('Injecting Environment Variables') {
+    stage('Zip Build') {
         steps {
-            echo 'loading Variables'
-             loadVariables()
-             echo 'Done'
+            script{
+                sh "zip -r ${TAG}.zip . -x 'Jenkinsfile' 'Dockerfile.ci' '.git' '.vscode'"
+            }
         }  
     }
 
-    stage('calling') {
+    stage('Upload to GCP') {
         steps {
-            echo 'Calling configs'
-             secretCall(key: "$SAST")
-        }  
-    }
-
-    stage('calling variables') {
-        steps {
-            echo "$KEY"
-            echo "$SECRET_KARZA_ID"
-            echo "$SECRET_TOKEN"
-            echo "$SAST"
-            echo "$SCA"
-        }  
-    }
-
-    stage('Maven Build') {
-        steps {
-            mvnCheck()
-        }  
-    }
-
-    stage('Unit Test') {
-        steps {
-            mvnTest()
+            script {
+				sh 'gcloud auth activate-service-account --key-file="$GCR_CRED"'
+                sh "gcloud run services list --project ${GCP_PROJECT}"
+                sh "gcloud storage ls"
+                sh "gcloud storage cp ${TAG}.zip gs://run-sources-activeproject-441912-us-central1/services/mycallablefunction/"
+            }
         }
-     }  
+    }
 
-    // stage('SAST') {
+    // stage('Deploy to Cloud function') {
     //     steps {
-    //         echo "${project_Name}"
-    //         mvnSonar(project_Name: "${project_Name}")
+    //         mvnTest()
     //     }
     //  }  
-
-    // stage('Quality Gate') {
-    //     steps {
-    //         mvnSonarQualityGate()
-    //     }
-    //  }  
-
-    // stage('DockerImage Build') {
-    //     steps {
-    //          dockerBuild()
-    //         }
-    //     }
-         
-    // stage('Docker Image Push') {
-    //     steps {
-    //         dockerImagePush(credentialsId: 'DockerID', url: 'https://registry.hub.docker.com')
-    //     }
-    //  }
  }
     post { 
         always {
-            echo "${project_Name}"
             cleanWs()
         }
     }
