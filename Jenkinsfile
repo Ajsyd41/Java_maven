@@ -70,6 +70,7 @@ pipeline {
         steps {
            script{
                 sh """gcloud functions deploy mycallablefunction \
+                       --gen2 \
                        --region=us-central1 \
                        --runtime=python311 \
                        --source=gs://run-sources-activeproject-441912-us-central1/services/mycallablefunction/${TAG}.zip \
