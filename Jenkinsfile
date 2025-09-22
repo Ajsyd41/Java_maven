@@ -76,7 +76,7 @@ pipeline {
                        --source=gs://run-sources-activeproject-441912-us-central1/services/myfunc/${TAG}.zip \
                        --entry-point=hello_http \
                        --allow-unauthenticated \
-                       --trigger-http
+                       --trigger-http --log-http --verbosity
                 """
            }
         }
