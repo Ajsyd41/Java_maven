@@ -98,11 +98,7 @@ pipeline {
     stage('Remove files') {
         steps {
             script {
-                sh '''
-                mkdir functiondeployfolder
-                mv main.py requirements.txt ./functiondeployfolder
-                ls -la ./functiondeployfolder
-                '''
+                sh 'rm -rf ./functiondeployfolder'
             }
         }
     }
