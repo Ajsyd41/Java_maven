@@ -11,7 +11,7 @@ pipeline {
         
         GCR_CRED=credentials('gcp-func-service-account-key')
         GCP_PROJECT='activeproject-441912'
-        FUNCTION_NAME='mydepfunc'
+        FUNCTION_NAME='d-test'
         REGION='us-central1'
         RUNTIME='python311'
         TIMEOUT='120s'
