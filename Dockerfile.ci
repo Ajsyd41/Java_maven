@@ -2,13 +2,9 @@ FROM alpine:3.22
 
 RUN apk add --update --no-cache \
 git \
-jq \
 curl \
-tar \
 bash \
 zip \
-python3 \
-py3-pip \
 docker-cli  
 
 RUN curl -sSL https://sdk.cloud.google.com | bash
