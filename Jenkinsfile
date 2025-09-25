@@ -85,6 +85,7 @@ pipeline {
                        --gen2 \
                        --region=us-central1 \
                        --runtime=python311 \
+                       --timeout=120s \
                        --source=./functiondeployfolder \
                        --entry-point=hello_http \
                        --allow-unauthenticated \
