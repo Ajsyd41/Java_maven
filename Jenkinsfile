@@ -11,9 +11,12 @@ pipeline {
         
         GCR_CRED=credentials('gcp-func-service-account-key')
         GCP_PROJECT='activeproject-441912'
-        PROJECT_NAME='mydepfunc'
-        ENVVALUE='qa'
-        TAG="${PROJECT_NAME}-${ENVVALUE}-${BUILD_NUMBER}"
+        FUNCTION_NAME='mydepfunc'
+        REGION='us-central1'
+        RUNTIME='python311'
+        TIMEOUT='120s'
+        DEPLOYMENT_FOLDER='functiondeployfolder'
+        ENTRYPOINT='hello_http'
     }
 
  stages {
@@ -39,23 +42,7 @@ pipeline {
         }
     }
 
-    stage('Install Dependencies'){
-        steps{
-            script{
-                sh 'apk add --update --no-cache maven aws-cli jq'
-            }
-        }
-    }
-
-    // stage('Zip Build') {
-    //     steps {
-    //         script{
-    //             sh "zip -r ${TAG}.zip . -x 'Jenkinsfile' 'Dockerfile.ci' '*.git*' '*.vscode*'"
-    //         }
-    //     }  
-    // }
-
-    stage('Upload to GCP') {
+    stage('Authenticate to GCP') {
         steps {
             script {
 				sh 'gcloud auth activate-service-account --key-file="$GCR_CRED"'
@@ -68,24 +55,24 @@ pipeline {
         steps {
             script {
                 sh '''
-                mkdir functiondeployfolder
-                mv main.py requirements.txt ./functiondeployfolder
-                ls -la ./functiondeployfolder
+                    mkdir "${DEPLOYMENT_FOLDER}"
+                    mv main.py requirements.txt ./"${DEPLOYMENT_FOLDER}"
+                    ls -la ./"${DEPLOYMENT_FOLDER}"
                 '''
             }
         }
     }
 
-    stage('Deploy to Cloud function') {
+    stage('Deploy Cloud function') {
         steps {
            script{
-                sh """gcloud functions deploy d-test \
+                sh """gcloud functions deploy ${FUNCTION_NAME} \
                        --gen2 \
-                       --region=us-central1 \
-                       --runtime=python311 \
-                       --timeout=120s \
-                       --source=./functiondeployfolder \
-                       --entry-point=hello_http \
+                       --region=${REGION} \
+                       --runtime=${RUNTIME} \
+                       --timeout=${TIMEOUT} \
+                       --source=./${DEPLOYMENT_FOLDER} \
+                       --entry-point=${ENTRYPOINT} \
                        --allow-unauthenticated \
                        --trigger-http
                 """
@@ -96,7 +83,7 @@ pipeline {
     stage('Remove files') {
         steps {
             script {
-                sh 'rm -rf ./functiondeployfolder'
+                sh 'rm -rf ./"${DEPLOYMENT_FOLDER}"'
             }
         }
     }
