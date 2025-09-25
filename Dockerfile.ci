@@ -5,12 +5,11 @@ git \
 curl \
 bash \
 zip \
-docker-cli  
+python3 \
+docker-cli
 
 RUN curl -sSL https://sdk.cloud.google.com | bash
 
 ENV PATH $PATH:/root/google-cloud-sdk/bin
-
-RUN pip install --upgrade pip --break-system-packages
 
 CMD [ "bin/bash"]
