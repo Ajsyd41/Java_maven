@@ -47,40 +47,64 @@ pipeline {
         }
     }
 
-    stage('Zip Build') {
-        steps {
-            script{
-                sh "zip -r ${TAG}.zip . -x 'Jenkinsfile' 'Dockerfile.ci' '*.git*' '*.vscode*'"
-            }
-        }  
-    }
+    // stage('Zip Build') {
+    //     steps {
+    //         script{
+    //             sh "zip -r ${TAG}.zip . -x 'Jenkinsfile' 'Dockerfile.ci' '*.git*' '*.vscode*'"
+    //         }
+    //     }  
+    // }
 
-    stage('Upload to GCP') {
+    // stage('Upload to GCP') {
+    //     steps {
+    //         script {
+	// 			sh 'gcloud auth activate-service-account --key-file="$GCR_CRED"'
+    //             sh 'gcloud config set project "${GCP_PROJECT}"'
+    //             sh "gcloud storage ls"
+    //             sh "gcloud storage cp ${TAG}.zip gs://run-sources-activeproject-441912-us-central1/services/mydepfunc/"
+    //         }
+    //     }
+    // }
+
+    stage('Move files') {
         steps {
             script {
-				sh 'gcloud auth activate-service-account --key-file="$GCR_CRED"'
-                sh 'gcloud config set project "${GCP_PROJECT}"'
-                sh "gcloud storage ls"
-                sh "gcloud storage cp ${TAG}.zip gs://run-sources-activeproject-441912-us-central1/services/mydepfunc/"
+                sh '''
+                mkdir functiondeployfolder
+                mv main.py requirements.txt ./functiondeployfolder
+                ls -la ./functiondeployfolder
+                '''
             }
         }
     }
 
-    // stage('Deploy to Cloud function') {
-    //     steps {
-    //        script{
-    //             sh """gcloud functions deploy myfunc \
-    //                    --gen2 \
-    //                    --region=us-central1 \
-    //                    --runtime=python311 \
-    //                    --source=gs://run-sources-activeproject-441912-us-central1/services/mydepfunc/${TAG}.zip \
-    //                    --entry-point=hello_http \
-    //                    --allow-unauthenticated \
-    //                    --trigger-http
-    //             """
-    //        }
-    //     }
-    //  }  
+    stage('Deploy to Cloud function') {
+        steps {
+           script{
+                sh """gcloud functions deploy d-test \
+                       --gen2 \
+                       --region=us-central1 \
+                       --runtime=python311 \
+                       --source=./functiondeployfolder \
+                       --entry-point=hello_http \
+                       --allow-unauthenticated \
+                       --trigger-http
+                """
+           }
+        }
+     }
+
+    stage('Remove files') {
+        steps {
+            script {
+                sh '''
+                mkdir functiondeployfolder
+                mv main.py requirements.txt ./functiondeployfolder
+                ls -la ./functiondeployfolder
+                '''
+            }
+        }
+    }
  }
     post { 
         always {
